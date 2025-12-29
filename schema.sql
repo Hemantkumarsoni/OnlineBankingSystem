@@ -3,59 +3,81 @@ CREATE DATABASE bankSystem;
 
 USE bankSystem;
 
-CREATE TABLE signup (
-	form VARCHAR(10),
+CREATE TABLE users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(30) NOT NULL,
-    fname VARCHAR(30),
-    gender VARCHAR(10),
-    dob VARCHAR(30) NOT NULL,
-    email VARCHAR(30) UNIQUE NOT NULL,
-    marital VARCHAR(10) NOT NULL,
-    address VARCHAR(30),
+    father_name VARCHAR(30),
+    gender ENUM('Male','Female','Other'),
+    dob DATE NOT NULL,
+    email VARCHAR(50) UNIQUE NOT NULL,
+    marital_status ENUM('Married','Unmarried'),
+    address VARCHAR(100),
     city VARCHAR(30),
     pin INT NOT NULL,
     state VARCHAR(30) NOT NULL
 );
-SELECT * FROM signup;
+SELECT * FROM users;
+DELETE FROM users;
 
-CREATE TABLE signup2 (
-	form VARCHAR(10),
-    religion VARCHAR(30),
-    category VARCHAR(30),
-    income VARCHAR(30),
-    educational VARCHAR(30),
+CREATE TABLE kyc_details (
+    user_id INT PRIMARY KEY,
+    religion VARCHAR(20),
+    category VARCHAR(20),
+    income VARCHAR(20),
+    education VARCHAR(30),
     occupation VARCHAR(30),
     pan VARCHAR(10) UNIQUE NOT NULL,
     aadhar BIGINT UNIQUE NOT NULL,
-    seniorCitizen VARCHAR(10),
-    existingAccount VARCHAR(10)
+    senior_citizen ENUM('Yes','No'),
+    existing_account ENUM('Yes','No'),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+        ON DELETE CASCADE
 );
-SELECT * FROM signup2;
+SELECT * FROM kyc_details;
+DELETE FROM kyc_details;
 
-CREATE TABLE signup3 (
-	form VARCHAR(10),
-    accountType VARCHAR(30),
-    card_no BIGINT PRIMARY KEY,
-    pin INT,
-    facility VARCHAR(300)
+CREATE TABLE accounts (
+    user_id INT PRIMARY KEY,
+    account_type VARCHAR(30),
+    card_no BIGINT UNIQUE NOT NULL,
+    pin INT NOT NULL,
+    facilities VARCHAR(200),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+        ON DELETE CASCADE
 );
-SELECT * FROM signup3;
+SELECT * FROM accounts;
+DELETE FROM accounts;
 
 CREATE TABLE login (
-	form VARCHAR(10),
-    card_no BIGINT PRIMARY KEY,
-    pin INT
+    user_id INT PRIMARY KEY,
+    card_no BIGINT UNIQUE NOT NULL,
+    pin INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (card_no) REFERENCES accounts(card_no)
 );
 SELECT * FROM login;
+DELETE FROM login;
 
-CREATE TABLE bank (
+CREATE TABLE transactions (
     card_no BIGINT,
-    date VARCHAR(30),
-    type VARCHAR(30),
-    amount INT
+    txn_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    txn_type ENUM('Deposit','Withdraw','Transfer'),
+    amount INT NOT NULL,
+    FOREIGN KEY (card_no) REFERENCES accounts(card_no)
 );
-SELECT * FROM bank;
+SELECT * FROM transactions;
+DELETE FROM transactions;
 
 SHOW TABLES;
+
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE users;
+TRUNCATE TABLE kyc_details;
+SET FOREIGN_KEY_CHECKS = 1;
+
+SET SQL_SAFE_UPDATES = 0;
+DELETE FROM users;
+SET SQL_SAFE_UPDATES = 1;
+
     
 	

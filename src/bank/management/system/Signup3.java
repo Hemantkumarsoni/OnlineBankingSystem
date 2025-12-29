@@ -5,31 +5,27 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.PreparedStatement;
 import java.util.Random;
 
 public class Signup3 extends JFrame implements ActionListener {
     JRadioButton ac1, ac2, ac3, ac4;
     JCheckBox c1, c2, c3, c4, c5, c6;
     JButton submit, cancel;
-    String formno = "1234";
-    Signup3(String formno) {
-        super("Application Form");
+    int userId;
+    Signup3(int userId) {
+        super("Accounts Details Page");
 
         setLayout(null);
         getContentPane().setBackground(Color.WHITE);
 
-        this.formno = formno;
-        JLabel labelForm = new JLabel("Form No : ");
+        this.userId = userId;
+        JLabel labelForm = new JLabel("Form No : "+userId);
         labelForm.setFont(new Font("Raleway", Font.BOLD,14));
         labelForm.setBounds(700,10,100,30);
         add(labelForm);
 
-        JLabel l13 = new JLabel(formno);
-        l13.setFont(new Font("Raleway", Font.BOLD,14));
-        l13.setBounds(760,10,60,30);
-        add(l13);
-
-        JLabel l1 = new JLabel("Page 3:");
+        JLabel l1 = new JLabel("Page 3:  "+userId);
         l1.setFont(new Font("Raleway",Font.BOLD,22));
         l1.setBounds(300,20,400,40);
         add(l1);
@@ -195,31 +191,28 @@ public class Signup3 extends JFrame implements ActionListener {
             accType = "Recurring Deposit Account";
         }
 
-        Random ran = new Random();
-        long card = (ran.nextLong() % 90000000L) + 1409963000000000L;
-        String cardno = "" + Math.abs(card);
+        Random r = new Random();
+        long card_no = 4000000000000000L + r.nextInt(99999999);
+        int pin_no = 1000 + r.nextInt(9000);
 
-        long pin = (ran.nextLong() % 9000L)+ 1000L;
-        String pinno = "" + Math.abs(pin);
-
-        String fac = "";
+        String facilities = "";
         if(c1.isSelected()){
-            fac = fac+"ATM CARD ";
+            facilities = facilities + "ATM CARD ";
         }
         if (c2.isSelected()) {
-            fac = fac+"Internet Banking";
+            facilities = facilities + "Internet Banking";
         }
         if (c3.isSelected()) {
-            fac = fac+"Mobile Banking";
+            facilities = facilities + "Mobile Banking";
         }
         if (c4.isSelected()) {
-            fac = fac+"EMAIL Alerts";
+            facilities = facilities + "EMAIL Alerts";
         }
         if (c5.isSelected()) {
-            fac=fac+"Cheque Book";
+            facilities = facilities + "Cheque Book";
         }
         if (c6.isSelected()) {
-            fac=fac+"E-Statement";
+            facilities = facilities +"E-Statement";
         }
 
         try {
@@ -227,12 +220,29 @@ public class Signup3 extends JFrame implements ActionListener {
                 if (accType.equals("")){
                     JOptionPane.showMessageDialog(null,"Fill all the fields");
                 }else {
-                    Conn c3 = new Conn();
-                    String q1 = "insert into signup3 values('"+formno+"', '"+accType+"','"+cardno+"','"+pin+"','"+fac+"')";
-                    String q2 = "insert into login values('"+formno+"','"+cardno+"','"+pin+"')";
-                    c3.statement.executeUpdate(q1);
-                    c3.statement.executeUpdate(q2);
-                    JOptionPane.showMessageDialog(null,"Card Number : "+cardno+"\n Pin : "+pin );
+                    Conn c = new Conn();
+                    String accSql = "INSERT INTO accounts " +
+                            "(user_id, account_type, card_no, pin, facilities) " +
+                            "VALUES (?, ?, ?, ?, ?)";
+
+                    PreparedStatement ps1 = c.connection.prepareStatement(accSql);
+                    ps1.setInt(1, userId);
+                    ps1.setString(2, accType);
+                    ps1.setLong(3, card_no);
+                    ps1.setInt(4, pin_no);
+                    ps1.setString(5, facilities);
+                    ps1.executeUpdate();
+
+                    String loginSql = "INSERT INTO LOGIN (user_id, card_no, pin) VALUES (?, ?, ?)";
+
+                    PreparedStatement ps2 = c.connection.prepareStatement(loginSql);
+                    ps2.setInt(1, userId);
+                    ps2.setLong(2, card_no);
+                    ps2.setInt(3, pin_no);
+                    ps2.executeUpdate();
+
+                    JOptionPane.showMessageDialog(null,
+                            "Account Created Successfully!\nCard: " + card_no + "\nPIN: " + pin_no);
                     setVisible(false);
                 }
             } else if (e.getSource() == cancel) {
@@ -245,6 +255,6 @@ public class Signup3 extends JFrame implements ActionListener {
     }
 
     public static void main(String[] args) {
-        new Signup3("");
+        new Signup3(15);
     }
 }

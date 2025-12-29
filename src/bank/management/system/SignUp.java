@@ -4,7 +4,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Random;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+//import java.util.*;
 
 
 public class SignUp extends JFrame implements ActionListener {
@@ -12,28 +15,26 @@ public class SignUp extends JFrame implements ActionListener {
     JTextField textName, textFname, textEmail, textAdd, textCity, textPin, textState, dateChooser;
     JRadioButton r1, r2, m1, m2;
     JButton next, back;
-    Random ran = new Random();
-    long first4 = (ran.nextLong() % 9000L) + 1000L;
-    String first = " "+Math.abs(first4);
+
     SignUp() {
         super("Application Form");
 
         setLayout(null);
         getContentPane().setBackground(Color.WHITE);
 
-        label1 = new JLabel("APPLICATION FORM NO. "+first);
-        label1.setBounds(200, 20, 600, 40);
+        label1 = new JLabel("USER REGISTRATION. ");
+        label1.setBounds(280, 20, 600, 40);
         label1.setFont(new Font("Raleway", Font.BOLD, 26));
         add(label1);
 
         label2 = new JLabel("Page 1");
         label2.setFont(new Font("Raleway", Font.BOLD, 22));
-        label2.setBounds(330, 70, 600, 30);
+        label2.setBounds(370, 70, 600, 30);
         add(label2);
 
         label3 = new JLabel("Personal Details");
         label3.setFont(new Font("Raleway", Font.BOLD, 22));
-        label3.setBounds(290, 110, 600, 30);
+        label3.setBounds(320, 110, 600, 30);
         add(label3);
 
         JLabel labelName = new JLabel("Name : ");
@@ -56,7 +57,7 @@ public class SignUp extends JFrame implements ActionListener {
         textFname.setBounds(300, 240, 400, 30);
         add(textFname);
 
-        JLabel DOB = new JLabel("Date of Birth : ");
+        JLabel DOB = new JLabel("DOB (yyyy-mm-dd) : ");
         DOB.setFont(new Font("Raleway", Font.BOLD, 20));
         DOB.setBounds(100, 340, 200, 30);
         add(DOB);
@@ -163,7 +164,7 @@ public class SignUp extends JFrame implements ActionListener {
         next.setFont(new Font("Raleway", Font.BOLD, 20));
         next.setForeground(Color.WHITE);
         next.setBackground(new Color(0, 123, 255));
-        next.setBounds(620, 710, 80, 30);
+        next.setBounds(620, 710, 100, 50);
         next.addActionListener(this);
         add(next);
 
@@ -171,7 +172,7 @@ public class SignUp extends JFrame implements ActionListener {
         back.setFont(new Font("Raleway", Font.BOLD, 20));
         back.setForeground(Color.WHITE);
         back.setBackground(new Color(0, 123, 255));
-        back.setBounds(150, 710, 90, 30);
+        back.setBounds(150, 710, 100, 50);
         back.addActionListener(this);
         add(back);
 
@@ -183,43 +184,60 @@ public class SignUp extends JFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        String form = first;
         String name = textName.getText();
         String fname = textFname.getText();
-        String gender = null;
-        if(r1.isSelected()) {
-            gender = "Male";
-        }
-        else if(r2.isSelected()) {
-            gender = "Female";
-        }
+        String gender = r1.isSelected() ? "Male" : "Female";
         String dob = dateChooser.getText();
         String email = textEmail.getText();
-        String marital = null;
-        if(m1.isSelected()) {
-            marital = "Married";
-        }
-        else if(m2.isSelected()) {
-            marital = "Unmarried";
-        }
+        String marital = m1.isSelected() ? "Married" : "Unmarried";
         String address = textAdd.getText();
         String city = textCity.getText();
         String pin = textPin.getText();
         String state = textState.getText();
+
+        DateFormatValidator dfv = new DateFormatValidator();
+        if(!dob.isEmpty() && !dfv.isValidDate(dob)) {
+            JOptionPane.showMessageDialog(null, "Invalid Date");
+            dateChooser.setText("");
+            return;
+        }
 
         try {
             if (e.getSource() == back) {
                 setVisible(false);
                 new Login();
             }
-            else if (textName.getText().equals("")) {
+            else if (name.equals("") || email.equals("") || dob.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Fill all the Text field");
             }
             else if(e.getSource() == next){
-                Conn c1 = new Conn();
-                String q = "insert into signup values('" + form + "', '" + name + "', '" + fname + "', '" + gender + "', '" + dob + "', '" + email + "', '" + marital + "', '" + address + "', '" + city + "', '" + pin + "', '" + state + "')";
-                c1.statement.executeUpdate(q);
-                new SignUp2(form);
+                Conn c = new Conn();
+                String sql = "INSERT INTO users " +
+                        "(name, father_name, gender, dob, email, marital_status, address, city, pin, state) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+                PreparedStatement ps = c.connection.prepareStatement(sql, c.statement.RETURN_GENERATED_KEYS);
+
+                ps.setString(1, name);
+                ps.setString(2, fname);
+                ps.setString(3, gender);
+                ps.setDate(4, Date.valueOf(dob));
+                ps.setString(5, email);
+                ps.setString(6, marital);
+                ps.setString(7, address);
+                ps.setString(8, city);
+                ps.setInt(9, Integer.parseInt(pin));
+                ps.setString(10, state);
+
+                ps.executeUpdate();
+
+                // get auto-generated user_id
+                ResultSet rs = ps.getGeneratedKeys();
+                if (rs.next()) {
+                    int userId = rs.getInt(1);
+                    new SignUp2(userId);
+                    setVisible(false);
+                }
                 setVisible(false);
             }
 

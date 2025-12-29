@@ -2,8 +2,8 @@ package bank.management.system;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 public class Login extends JFrame implements ActionListener {
@@ -12,10 +12,16 @@ public class Login extends JFrame implements ActionListener {
     JPasswordField textPassword;
     JButton signin, clear, signup;
     Login() {
-        super("Onine Banking System");
+        super("Login Page");
         setLayout(null);
         getContentPane().setBackground(Color.WHITE);
 
+        ImageIcon i1 = new ImageIcon(ClassLoader.getSystemResource("icon/bank.png"));
+        Image i2 = i1.getImage().getScaledInstance(100,100,Image.SCALE_DEFAULT);
+        ImageIcon i3 = new ImageIcon(i2);
+        JLabel image = new JLabel(i3);
+        image.setBounds(25,10,100,100);
+        add(image);
 
         label = new JLabel("Welcome To Bank");
         label.setForeground(Color.blue);
@@ -43,6 +49,32 @@ public class Login extends JFrame implements ActionListener {
         textPassword.setBounds(325,240,230,30);
         textPassword.setFont(new Font("Arial", Font.BOLD,14));
         add(textPassword);
+
+        JLabel forgotCard = new JLabel("<HTML><U>Forgot Card No?</U></HTML>");
+        forgotCard.setForeground(Color.BLUE);
+        forgotCard.setBounds(100, 300, 150, 20);
+        add(forgotCard);
+
+        JLabel forgotPin = new JLabel("<HTML><U>Forgot PIN?</U></HTML>");
+        forgotPin.setForeground(Color.BLUE);
+        forgotPin.setBounds(270, 300, 150, 20);
+        add(forgotPin);
+
+        forgotCard.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                setVisible(false);
+                new ForgotCard();
+            }
+        });
+
+        forgotPin.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                setVisible(false);
+                new ForgotPin();
+            }
+        });
+
+
 
         signin = new JButton("SIGN IN");
         signin.setFont(new Font("Arial", Font.BOLD, 14));
@@ -83,44 +115,67 @@ public class Login extends JFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == signin) {
-            Conn c = new Conn();
-            String cardno = textCardNo.getText();
-            String password = textPassword.getText();
-            try {
-                String q = "select * from login where card_no = '" + cardno + "' and pin = '" + password + "'";
-                ResultSet resultSet = c.statement.executeQuery(q);
 
-                if (resultSet.next()) {
-                    String formno = resultSet.getString("form");
-                    String nameQuery = "select name from signup where form = '" + formno + "'";
-                    ResultSet nameResult = c.statement.executeQuery(nameQuery);
+        if (e.getSource() == signin) {
+
+            String cardno = textCardNo.getText();
+            String pin = textPassword.getText();
+
+            if(cardno.isEmpty() || pin.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Fill the card no or pin first");
+            }
+
+            try {
+                Conn c = new Conn();
+
+                String loginSql = "SELECT user_id FROM login WHERE card_no = ? AND pin = ?";
+                PreparedStatement ps = c.connection.prepareStatement(loginSql);
+                ps.setLong(1, Long.parseLong(cardno));
+                ps.setInt(2, Integer.parseInt(pin));
+
+                ResultSet rs = ps.executeQuery();
+
+                if (rs.next()) {
+                    int userId = rs.getInt("user_id");
+
+                    String userSql = "SELECT name FROM users WHERE user_id = ?";
+                    PreparedStatement ps2 = c.connection.prepareStatement(userSql);
+                    ps2.setInt(1, userId);
+
+                    ResultSet rs2 = ps2.executeQuery();
 
                     String name = "";
-                    if (nameResult.next()) {
-                        name = nameResult.getString("name");
+                    if (rs2.next()) {
+                        name = rs2.getString("name");
                     }
 
                     String info[] = {cardno, name};
                     setVisible(false);
                     new Main(info);
+
                 } else {
                     JOptionPane.showMessageDialog(null, "Incorrect Card Number or PIN");
                 }
+
             } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, "Incorrect Card Number or PIN");
+                textCardNo.setText("");
+                textPassword.setText("");
                 ex.printStackTrace();
             }
         }
 
-        else if(e.getSource() == clear) {
+        else if (e.getSource() == clear) {
             textCardNo.setText("");
             textPassword.setText("");
         }
-        else if(e.getSource() == signup) {
+
+        else if (e.getSource() == signup) {
             setVisible(false);
             new SignUp();
         }
     }
+
 
     public static void main(String[] args) {
         new Login();

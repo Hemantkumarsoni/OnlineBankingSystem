@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Date;
 
@@ -11,38 +12,47 @@ public class Enquiry extends JFrame implements ActionListener {
     String cardno, name, totAmount;
     JButton exit;
     Enquiry(String info[]) {
-        super("");
+        super("Balance Enquiry");
         this.cardno = info[0];
         this.name = info[1];
 
         setLayout(null);
         getContentPane().setBackground(Color.WHITE);
 
-        JLabel labelName = new JLabel("Account Holder Name : "+name);
+        JLabel labelName = new JLabel("Account Holder Name :  "+name);
         labelName.setFont(new Font("Raleway", Font.BOLD, 22));
         labelName.setBounds(100, 50, 500, 30);
         add(labelName);
 
-        JLabel labelCard = new JLabel("Card Number :"+cardno);
+        JLabel labelCard = new JLabel("Card Number :  "+cardno);
         labelCard.setFont(new Font("Raleway", Font.BOLD, 22));
         labelCard.setBounds(100, 100, 500, 30);
         add(labelCard);
 
         try {
             Conn draw = new Conn();
-            String q = "select * from bank where card_no = '" + cardno + "' ";
-            ResultSet resultSet = draw.statement.executeQuery(q);
+
+            String sql = "SELECT txn_type, amount FROM transactions WHERE card_no = ?";
+            PreparedStatement ps = draw.connection.prepareStatement(sql);
+            ps.setString(1, cardno);
+
+            ResultSet resultSet = ps.executeQuery();
 
             int balance = 0;
-            Date date = new Date();
+
             while (resultSet.next()) {
-                if (resultSet.getString("type").equals("DEPOSIT")) {
-                    balance += Integer.parseInt(resultSet.getString("amount"));
-                } else {
-                    balance -= Integer.parseInt(resultSet.getString("amount"));
+                String txnType = resultSet.getString("txn_type");
+                int amount = resultSet.getInt("amount");
+
+                if (txnType.equalsIgnoreCase("Deposit")) {
+                    balance += amount;
+                } else if (txnType.equalsIgnoreCase("Withdraw")) {
+                    balance -= amount;
                 }
             }
-            totAmount = ""+balance;
+
+            totAmount = String.valueOf(balance);
+
         } catch (Exception E) {
             E.printStackTrace();
         }

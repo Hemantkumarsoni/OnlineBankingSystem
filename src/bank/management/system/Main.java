@@ -9,18 +9,18 @@ public class Main extends JFrame implements ActionListener {
     String cardno, name;
     JButton deposit, withdrawl, mini, enquiry, changePin, exit;
     Main(String info[]) {
-        super("");
+        super("Online Banking System");
         this.cardno = info[0];
         this.name = info[1];
         setLayout(null);
         getContentPane().setBackground(Color.WHITE);
 
-        JLabel labelName = new JLabel("Account Holder Name : "+name);
+        JLabel labelName = new JLabel("Account Holder Name :  "+name);
         labelName.setFont(new Font("Raleway", Font.BOLD, 22));
         labelName.setBounds(100, 50, 500, 30);
         add(labelName);
 
-        JLabel labelCard = new JLabel("Card Number :"+cardno);
+        JLabel labelCard = new JLabel("Card Number :  "+cardno);
         labelCard.setFont(new Font("Raleway", Font.BOLD, 22));
         labelCard.setBounds(100, 100, 500, 30);
         add(labelCard);

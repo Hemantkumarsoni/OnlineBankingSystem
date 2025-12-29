@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.PreparedStatement;
 import java.util.Date;
 
 public class Deposit extends JFrame implements ActionListener {
@@ -11,19 +12,19 @@ public class Deposit extends JFrame implements ActionListener {
     JButton exit, confirm;
     JTextField depAmount;
     Deposit(String info[]) {
-        super("");
+        super("Deposit Page");
         this.cardno = info[0];
         this.name = info[1];
 
         setLayout(null);
         getContentPane().setBackground(Color.WHITE);
 
-        JLabel labelName = new JLabel("Account Holder Name : "+name);
+        JLabel labelName = new JLabel("Account Holder Name :  "+name);
         labelName.setFont(new Font("Raleway", Font.BOLD, 22));
         labelName.setBounds(100, 50, 500, 30);
         add(labelName);
 
-        JLabel labelCard = new JLabel("Card Number :"+cardno);
+        JLabel labelCard = new JLabel("Card Number :  "+cardno);
         labelCard.setFont(new Font("Raleway", Font.BOLD, 22));
         labelCard.setBounds(100, 100, 500, 30);
         add(labelCard);
@@ -63,28 +64,43 @@ public class Deposit extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         try {
-            if(e.getSource() == exit) {
+            if (e.getSource() == exit) {
                 setVisible(false);
                 new Main(new String[]{cardno, name});
             }
-            else if(e.getSource() == confirm) {
-                if(depAmount.getText().equals("")) {
-                    JOptionPane.showMessageDialog(null, "Please Enter the Amount You Want To Deposit");
-                } else {
-                    Conn dep = new Conn();
-                    Date date = new Date();
-                    String amt = depAmount.getText();
-                    String q = "insert into bank values('"+cardno+"', '"+date+"', 'DEPOSIT', '"+amt+"')";
-                    dep.statement.executeUpdate(q);
-                    JOptionPane.showMessageDialog(null, "Rs. "+amt+" Successfully deposited");
-                    setVisible(false);
-                    new Main(new String[]{cardno, name});
+            else if (e.getSource() == confirm) {
+
+                if (depAmount.getText().trim().equals("")) {
+                    JOptionPane.showMessageDialog(null, "Please enter amount");
+                    return;
                 }
+
+                int amount = Integer.parseInt(depAmount.getText());
+
+                Conn c = new Conn();
+
+                String sql = "INSERT INTO transactions (card_no, txn_type, amount) VALUES (?, ?, ?)";
+
+                PreparedStatement ps = c.connection.prepareStatement(sql);
+                ps.setLong(1, Long.parseLong(cardno));
+                ps.setString(2, "Deposit");
+                ps.setInt(3, amount);
+
+                ps.executeUpdate();
+
+                JOptionPane.showMessageDialog(null,
+                        "Rs. " + amount + " successfully deposited");
+
+                setVisible(false);
+                new Main(new String[]{cardno, name});
             }
-        } catch (Exception E) {
-            E.printStackTrace();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Transaction failed");
         }
     }
+
 
     public static void main(String[] args) {
         String[] dummy = {"1234567890", "John Doe"};

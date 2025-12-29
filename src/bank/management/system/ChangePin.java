@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.PreparedStatement;
 
 public class ChangePin extends JFrame implements ActionListener {
     String cardno, name;
@@ -17,12 +18,12 @@ public class ChangePin extends JFrame implements ActionListener {
         setLayout(null);
         getContentPane().setBackground(Color.WHITE);
 
-        JLabel labelName = new JLabel("Account Holder Name : "+name);
+        JLabel labelName = new JLabel("Account Holder Name :  "+name);
         labelName.setFont(new Font("Raleway", Font.BOLD, 22));
         labelName.setBounds(100, 50, 500, 30);
         add(labelName);
 
-        JLabel labelCard = new JLabel("Card Number :"+cardno);
+        JLabel labelCard = new JLabel("Card Number :  "+cardno);
         labelCard.setFont(new Font("Raleway", Font.BOLD, 22));
         labelCard.setBounds(100, 100, 500, 30);
         add(labelCard);
@@ -92,15 +93,24 @@ public class ChangePin extends JFrame implements ActionListener {
                     return;
                 }
 
-                Conn pin = new Conn();
-                String q1 = "update signup3 set pin = '"+p1+"' where card_no = '"+cardno+"' ";
-                String q2 = "update login set pin = '"+p1+"' where card_no = '"+cardno+"' ";
-                pin.statement.executeUpdate(q1);
-                pin.statement.executeUpdate(q2);
+                Conn c = new Conn();
 
-                JOptionPane.showMessageDialog(null, "Pin Changed Successfully");
+                String q1 = "UPDATE accounts SET pin = ? WHERE card_no = ?";
+                PreparedStatement ps1 = c.connection.prepareStatement(q1);
+                ps1.setInt(1, Integer.parseInt(p1));
+                ps1.setLong(2, Long.parseLong(cardno));
+                ps1.executeUpdate();
+
+                String q2 = "UPDATE login SET pin = ? WHERE card_no = ?";
+                PreparedStatement ps2 = c.connection.prepareStatement(q2);
+                ps2.setInt(1, Integer.parseInt(p1));
+                ps2.setLong(2, Long.parseLong(cardno));
+                ps2.executeUpdate();
+
+                JOptionPane.showMessageDialog(null, "PIN Changed Successfully");
                 setVisible(false);
                 new Main(new String[]{cardno, name});
+
             }
         } catch (Exception E) {
             E.printStackTrace();

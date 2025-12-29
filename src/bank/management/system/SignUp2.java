@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.PreparedStatement;
 
 
 public class SignUp2 extends JFrame implements ActionListener {
@@ -12,15 +13,15 @@ public class SignUp2 extends JFrame implements ActionListener {
     JTextField textPan, textAadhar;
     JRadioButton s1, s2, e1, e2;
     JButton next;
-    String formno = "1234";
-    SignUp2(String formno) {
-        super("APPLICATION FORM");
+    int userId;
+    SignUp2(int userId) {
+        super("KYC Details Page");
 
         setLayout(null);
         getContentPane().setBackground(Color.WHITE);
 
-        this.formno = formno;
-        JLabel labelPage = new JLabel("Page 2:"+formno);
+        this.userId = userId;
+        JLabel labelPage = new JLabel("Page 2:  "+userId);
         labelPage.setFont(new Font("RaleWay", Font.BOLD, 22));
         labelPage.setBounds(340,20,600,40);
         add(labelPage);
@@ -158,9 +159,9 @@ public class SignUp2 extends JFrame implements ActionListener {
         labelForm.setBounds(700,10,100,30);
         add(labelForm);
 
-        JLabel textForm = new JLabel(formno);
+        JLabel textForm = new JLabel(userId+" ");
         textForm.setFont(new Font("Raleway", Font.BOLD,14));
-        textForm.setBounds(760,10,60,30);
+        textForm.setBounds(780,10,60,30);
         add(textForm);
 
         next = new JButton("Next");
@@ -180,40 +181,44 @@ public class SignUp2 extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
 
-        String relg = (String) rel.getSelectedItem();
-        String cat = (String) catg.getSelectedItem();
-        String incm = (String) inc.getSelectedItem();
-        String educ = (String) edu.getSelectedItem();
-        String occu = (String) occ.getSelectedItem();
-
+        String religion = (String) rel.getSelectedItem();
+        String category = (String) catg.getSelectedItem();
+        String income = (String) inc.getSelectedItem();
+        String education = (String) edu.getSelectedItem();
+        String occupation = (String) occ.getSelectedItem();
         String aadhar = textAadhar.getText();
         String pan = textPan.getText();
+        String sCitizen = s1.isSelected() ? "Yes" : s2.isSelected() ? "No" : null;
+        String eAccount = e1.isSelected() ? "Yes" : e2.isSelected() ? "No" : null;
 
-        String sCitizen = null;
-        if(s1.isSelected()) {
-            sCitizen = "Yes";
-        }
-        else if(s2.isSelected()) {
-            sCitizen = "False";
-        }
-
-        String eAccount = null;
-        if(e1.isSelected()) {
-            eAccount = "Yes";
-        }
-        else if(e2.isSelected()) {
-            eAccount = "No";
-        }
 
         try {
             if(textAadhar.getText().equals("") || textPan.getText().equals("")) {
                 JOptionPane.showMessageDialog(null, "Fill all the Fields");
             } else {
-                Conn c2 = new Conn();
-                String q = "insert into signup2 values('"+formno+"', '"+relg+"', '"+cat+"', '"+incm+"', '"+educ+"', '"+occu+"', '"+pan+"', '"+aadhar+"', '"+sCitizen+"', '"+eAccount+"')";
-                c2.statement.executeUpdate(q);
-                new Signup3(formno);
+                Conn c = new Conn();
+                String sql = "INSERT INTO kyc_details "+
+                        "(user_id, religion, category, income, education, occupation, pan, aadhar, senior_citizen, existing_account)"+
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+                PreparedStatement ps = c.connection.prepareStatement(sql);
+
+                ps.setInt(1, userId);
+                ps.setString(2, religion);
+                ps.setString(3, category);
+                ps.setString(4, income);
+                ps.setString(5, education);
+                ps.setString(6, occupation);
+                ps.setString(7, pan);
+                ps.setLong(8, Long.parseLong(aadhar));
+                ps.setString(9, sCitizen);
+                ps.setString(10, eAccount);
+
+                ps.executeUpdate();
+
+                JOptionPane.showMessageDialog(null, "KYC Saved Successfully");
                 setVisible(false);
+                new Signup3(userId);
             }
 
         }catch (Exception E) {
@@ -222,6 +227,6 @@ public class SignUp2 extends JFrame implements ActionListener {
     }
 
     public static void main(String[] args) {
-        new SignUp2("");
+        new SignUp2(15);
     }
 }
