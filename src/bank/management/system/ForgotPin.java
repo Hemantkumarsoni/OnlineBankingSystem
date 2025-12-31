@@ -90,8 +90,19 @@ public class ForgotPin extends JFrame implements ActionListener {
                 ps.setLong(2, Long.parseLong(card.getText()));
                 ps.setString(3, email.getText());
 
+                String sqla =
+                        "UPDATE accounts a JOIN users u ON a.user_id=u.user_id " +
+                                "SET a.pin=? WHERE a.card_no=? AND u.email=?";
+
+                PreparedStatement psa = c.connection.prepareStatement(sqla);
+                psa.setInt(1, Integer.parseInt(newPin.getText()));
+                psa.setLong(2, Long.parseLong(card.getText()));
+                psa.setString(3, email.getText());
+
                 int updated = ps.executeUpdate();
-                if (updated > 0) {
+                int updated2 = psa.executeUpdate();
+
+                if (updated > 0 && updated2 > 0) {
                     JOptionPane.showMessageDialog(null, "PIN reset successful");
                     setVisible(false);
                     new Login();
